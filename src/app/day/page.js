@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import SortableList, { reorder } from "@/components/SortableList";
 import { Card, Field, Modal, SectionHeader, Segmented } from "@/components/ui";
 import { CATEGORIES, DAY_MODES, catColor, modeById } from "@/lib/catalog";
-import { blocksFor, doneFor, modeFor, uid, useApp } from "@/lib/store";
+import { blocksFor, dayProgress, doneFor, modeFor, uid, useApp } from "@/lib/store";
 import {
   addDays,
   dateKey,
@@ -31,12 +31,131 @@ function repack(original, next) {
   });
 }
 
-const EMOJIS = ["📚", "💻", "🧩", "🏋️", "🎮", "🎸", "🍽️", "☕", "🎓", "🔬", "✍️", "🧘", "⚽", "📖", "🛠️", "🌙"];
+const EMOJIS = ["📚", "🏃", "🧑‍💻", "🎮", "🛌", "🍽️", "📝", "⚡", "🎯", "💪", "🎧", "🌟", "🚀", "💡", "🎨", "🏋️"];
+
+// XP per completed block (based on category and duration)
+function blockXP(block) {
+  const dur = Math.max(0, block.end - block.start);
+  const base = Math.round(dur / 15) * 5; // 5 XP per 15 min
+  const multipliers = { study: 1.5, career: 1.5, fitness: 1.2, custom: 1.0, rest: 0.3, college: 1.0 };
+  return Math.max(5, Math.round(base * (multipliers[block.category] || 1.0)));
+}
+
+// XP level thresholds
+function xpToLevel(xp) {
+  const level = Math.floor(Math.sqrt(xp / 50)) + 1;
+  const current = Math.pow(level - 1, 2) * 50;
+  const next = Math.pow(level, 2) * 50;
+  return { level, current, next, progress: xp - current, needed: next - current };
+}
+
+function XPBar({ xp }) {
+  const { level, progress, needed } = xpToLevel(xp);
+  const pct = needed > 0 ? Math.min(100, (progress / needed) * 100) : 100;
+  const rankNames = ["Rookie", "Learner", "Scholar", "Achiever", "Expert", "Master", "Legend", "Champion", "Elite", "Prodigy"];
+  const rank = rankNames[Math.min(level - 1, rankNames.length - 1)];
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+            style={{
+              background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #8b5cf6))",
+              color: "#fff",
+              boxShadow: "0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent)",
+            }}
+          >
+            {level}
+          </div>
+          <div>
+            <div className="text-sm font-bold">{rank}</div>
+            <div className="text-[11px]" style={{ color: "var(--muted)" }}>{xp} XP total</div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-xs font-semibold" style={{ color: "var(--accent)" }}>Level {level}</div>
+          <div className="text-[11px]" style={{ color: "var(--muted)" }}>{progress}/{needed} to Lvl {level + 1}</div>
+        </div>
+      </div>
+      <div className="bar" style={{ height: "0.6rem" }}>
+        <i style={{
+          width: `${pct}%`,
+          background: "linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #8b5cf6))",
+          transition: "width 0.5s ease",
+        }} />
+      </div>
+    </Card>
+  );
+}
+
+function DayProgress({ blocks, done }) {
+  const active = blocks.filter((b) => b.end > b.start && b.category !== "rest");
+  const completed = active.filter((b) => done.has(b.id));
+  const pct = active.length ? Math.round((completed.length / active.length) * 100) : 0;
+  const earnedXP = completed.reduce((sum, b) => sum + blockXP(b), 0);
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <SectionHeader title="Today's progress" />
+        <div
+          className="text-xs font-semibold px-2 py-0.5 rounded-full"
+          style={{
+            background: "color-mix(in srgb, var(--accent) 18%, transparent)",
+            color: "var(--accent)",
+          }}
+        >
+          +{earnedXP} XP earned
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <div
+          className="relative flex-shrink-0"
+          style={{ width: 72, height: 72 }}
+        >
+          <svg width={72} height={72} className="-rotate-90">
+            <circle cx={36} cy={36} r={28} fill="none" stroke="var(--line)" strokeWidth={8} />
+            <circle
+              cx={36}
+              cy={36}
+              r={28}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth={8}
+              strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 28}
+              strokeDashoffset={2 * Math.PI * 28 - (2 * Math.PI * 28 * pct) / 100}
+              style={{ transition: "stroke-dashoffset 0.5s ease" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-base font-bold leading-none">{pct}%</span>
+          </div>
+        </div>
+        <div className="flex-1 space-y-1.5">
+          <div className="text-sm">
+            <strong>{completed.length}</strong>
+            <span style={{ color: "var(--muted)" }}>/{active.length} activities done</span>
+          </div>
+          <div className="bar">
+            <i style={{ width: `${pct}%`, background: "var(--accent)" }} />
+          </div>
+          <div className="text-[11px]" style={{ color: "var(--muted)" }}>
+            {pct === 100 ? "🎉 Perfect day! All activities completed!" : pct >= 50 ? "💪 Great progress, keep it up!" : "🚀 Get started — every block earns XP!"}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export default function MyDay() {
   const { state, dispatch } = useApp();
   const [offset, setOffset] = useState(0);
   const [editing, setEditing] = useState(null);
+  const [xpFlash, setXpFlash] = useState(null);
 
   const date = dateKey(addDays(new Date(), offset));
   const mode = modeFor(state, date);
@@ -64,6 +183,20 @@ export default function MyDay() {
     setEditing(null);
   };
 
+  const toggleDone = (block) => {
+    const wasNotDone = !done.has(block.id);
+    const xp = blockXP(block);
+    dispatch({ type: "toggleDone", payload: { date, id: block.id } });
+    if (wasNotDone) {
+      // Award XP for completing a block
+      dispatch({ type: "xp.add", payload: { amount: xp } });
+      setXpFlash({ id: block.id, xp });
+      setTimeout(() => setXpFlash(null), 1500);
+    } else {
+      dispatch({ type: "xp.deduct", payload: { amount: xp } });
+    }
+  };
+
   const totalPlanned = blocks.reduce((a, b) => a + (b.end - b.start), 0);
 
   return (
@@ -71,20 +204,20 @@ export default function MyDay() {
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold">My Day</h1>
-          <p className="text-sm text-muted">{longDate(parseKey(date))}</p>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>{longDate(parseKey(date))}</p>
         </div>
         <div className="flex items-center gap-1">
-          <button className="btn btn-sm" onClick={() => setOffset((o) => o - 1)}>
-            ←
-          </button>
-          <button className="btn btn-sm" onClick={() => setOffset(0)} disabled={offset === 0}>
-            Today
-          </button>
-          <button className="btn btn-sm" onClick={() => setOffset((o) => o + 1)}>
-            →
-          </button>
+          <button className="btn btn-sm" onClick={() => setOffset((o) => o - 1)}>←</button>
+          <button className="btn btn-sm" onClick={() => setOffset(0)} disabled={offset === 0}>Today</button>
+          <button className="btn btn-sm" onClick={() => setOffset((o) => o + 1)}>→</button>
         </div>
       </header>
+
+      {/* XP Bar */}
+      <XPBar xp={state.xp || 0} />
+
+      {/* Day Progress */}
+      <DayProgress blocks={blocks} done={done} />
 
       <Card>
         <SectionHeader title="Day mode" />
@@ -93,9 +226,9 @@ export default function MyDay() {
           onChange={(m) => dispatch({ type: "mode", payload: { date, mode: m } })}
           options={DAY_MODES.map((m) => ({ value: m.id, label: m.label, emoji: m.emoji }))}
         />
-        <p className="mt-2 text-xs text-muted">{modeMeta.note}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-          <span className="text-xs text-muted">
+        <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>{modeMeta.note}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: "var(--line)" }}>
+          <span className="text-xs" style={{ color: "var(--muted)" }}>
             {blocks.length} blocks · {fmtDuration(totalPlanned)} planned ·{" "}
             {isCustom ? "custom layout" : "auto-generated"}
           </span>
@@ -107,7 +240,7 @@ export default function MyDay() {
                   id: `new-${uid("b")}`,
                   uid: uid("b"),
                   label: "",
-                  emoji: "✨",
+                  emoji: "📖",
                   start: 18 * 60,
                   end: 19 * 60,
                   category: "custom",
@@ -125,57 +258,84 @@ export default function MyDay() {
               disabled={!isCustom}
               title="Rebuild this day from your goals and hobbies"
             >
-              ↻ Regenerate
+              ♻ Regenerate
             </button>
           </div>
         </div>
       </Card>
 
-      <p className="text-xs text-muted">
+      <p className="text-xs" style={{ color: "var(--muted)" }}>
         Drag the ⠿ handle to move an activity. Changes are saved to your{" "}
-        <strong>{modeMeta.label}</strong> template, so every {modeMeta.label.toLowerCase()} uses it.
+        <strong>{modeMeta.label}</strong> template.
       </p>
 
       <SortableList
         items={blocks}
         getKey={(b) => b.id}
         onReorder={onReorder}
-        renderItem={(b, i, { dragging, handleProps }) => (
-          <div
-            className="card flex items-center gap-2 p-2.5"
-            style={dragging ? { borderColor: "var(--accent)" } : undefined}
-          >
-            <button
-              {...handleProps}
-              className="px-1 text-lg text-muted"
-              aria-label={`Move ${b.label}`}
+        renderItem={(b, i, { dragging, handleProps }) => {
+          const isDone = done.has(b.id);
+          const xp = blockXP(b);
+          const isFlashing = xpFlash?.id === b.id;
+
+          return (
+            <div
+              className="card flex items-center gap-2 p-2.5 relative overflow-hidden"
+              style={dragging ? { borderColor: "var(--accent)" } : undefined}
             >
-              ⠿
-            </button>
-            <span className="w-[62px] shrink-0 font-mono text-xs text-muted">{fmtTime(b.start)}</span>
-            <span
-              className="h-8 w-1 shrink-0 rounded-full"
-              style={{ background: catColor(b.category) }}
-            />
-            <button className="min-w-0 flex-1 text-left" onClick={() => setEditing({ ...b })}>
-              <span className={`block truncate text-sm ${done.has(b.id) ? "text-muted line-through" : ""}`}>
-                {b.emoji} {b.label}
-              </span>
-              <span className="text-[11px] text-muted">
-                {b.end > b.start
-                  ? `${fmtTime(b.start)} – ${fmtTime(b.end)} · ${fmtDuration(b.end - b.start)}`
-                  : "End of day"}
-              </span>
-            </button>
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={() => dispatch({ type: "toggleDone", payload: { date, id: b.id } })}
-              aria-label="Toggle done"
-            >
-              {done.has(b.id) ? "✅" : "○"}
-            </button>
-          </div>
-        )}
+              {/* XP flash animation */}
+              {isFlashing && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+                  style={{ animation: "fadeOut 1.5s ease forwards" }}
+                >
+                  <span
+                    className="text-lg font-bold px-3 py-1 rounded-full"
+                    style={{
+                      background: "color-mix(in srgb, var(--accent) 25%, transparent)",
+                      color: "var(--accent)",
+                      border: "1px solid var(--accent)",
+                    }}
+                  >
+                    +{xpFlash.xp} XP! ✨
+                  </span>
+                </div>
+              )}
+              <button
+                {...handleProps}
+                className="px-1 text-lg"
+                style={{ color: "var(--muted)" }}
+                aria-label={`Move ${b.label}`}
+              >
+                ⠿
+              </button>
+              <span className="w-[62px] shrink-0 font-mono text-xs" style={{ color: "var(--muted)" }}>{fmtTime(b.start)}</span>
+              <span
+                className="h-8 w-1 shrink-0 rounded-full"
+                style={{ background: catColor(b.category) }}
+              />
+              <button className="min-w-0 flex-1 text-left" onClick={() => setEditing({ ...b })}>
+                <span className={`block truncate text-sm ${isDone ? "line-through" : ""}`} style={isDone ? { color: "var(--muted)" } : {}}>
+                  {b.emoji} {b.label}
+                </span>
+                <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                  {b.end > b.start
+                    ? `${fmtTime(b.start)} → ${fmtTime(b.end)} · ${fmtDuration(b.end - b.start)}`
+                    : "End of day"}
+                  {" · "}
+                  <span style={{ color: "var(--accent)" }}>+{xp} XP</span>
+                </span>
+              </button>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => toggleDone(b)}
+                aria-label="Toggle done"
+              >
+                {isDone ? "✅" : "⬜"}
+              </button>
+            </div>
+          );
+        }}
       />
 
       <Modal
@@ -185,9 +345,7 @@ export default function MyDay() {
         footer={
           <>
             {!editing?.isNew && (
-              <button className="btn" onClick={() => remove(editing.id)}>
-                Delete
-              </button>
+              <button className="btn" onClick={() => remove(editing.id)}>Delete</button>
             )}
             <button
               className="btn btn-primary"
@@ -279,6 +437,14 @@ export default function MyDay() {
           </div>
         )}
       </Modal>
+
+      <style>{`
+        @keyframes fadeOut {
+          0% { opacity: 1; transform: scale(1); }
+          70% { opacity: 1; transform: scale(1.1); }
+          100% { opacity: 0; transform: scale(0.9) translateY(-10px); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -103,33 +103,65 @@ export default function Dashboard() {
     ];
   }, [state.goals]);
   const notifications = useMemo(() => {
-    const deadlineAlerts = state.deadlines
+    const alerts = [];
+
+    // Deadlines
+    (state.deadlines || [])
       .filter((d) => !d.done)
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(0, 3)
-      .map((d) => ({
-        key: `deadline-${d.id}`,
-        icon: "⏳",
-        title: d.title,
-        meta: `${deadlineType(d.type).label} · ${countdownLabel(d.date)}`,
-      }));
-    const scheduleAlerts = state.docs.slice(0, 2).map((d) => ({
-      key: `doc-${d.id}`,
-      icon: "📅",
-      title: d.title || "College schedule",
-      meta: d.academicYear ? `${d.academicYear} · College schedule` : "College schedule",
-    }));
-    const taskAlerts = state.tasks
+      .forEach((d) => {
+        alerts.push({
+          key: `deadline-${d.id}`,
+          icon: "⏳",
+          title: d.title,
+          meta: `${deadlineType(d.type).label} · ${countdownLabel(d.date)}`,
+        });
+      });
+
+    // Low Attendance warning
+    const reqAtt = state.profile?.attendanceRequired ?? 75;
+    (state.attendance || []).forEach((a) => {
+      if (a.total > 0 && Math.round((a.attended / a.total) * 100) < reqAtt) {
+        alerts.push({
+          key: `att-${a.id}`,
+          icon: "📋",
+          title: `Low Attendance: ${a.name} (${Math.round((a.attended / a.total) * 100)}%)`,
+          meta: `Target ${reqAtt}% required`,
+        });
+      }
+    });
+
+    // Budget warning
+    const budget = state.ui?.budget || 0;
+    if (budget > 0) {
+      const curMonth = today.slice(0, 7);
+      const spent = (state.expenses || []).filter((e) => e.date?.startsWith(curMonth)).reduce((s, e) => s + Number(e.amount || 0), 0);
+      if (spent >= budget * 0.8) {
+        alerts.push({
+          key: `budget-${curMonth}`,
+          icon: spent > budget ? "⚠️" : "💰",
+          title: spent > budget ? "Monthly Budget Exceeded!" : "Approaching Budget Limit",
+          meta: `Spent ₹${spent.toLocaleString("en-IN")} of ₹${budget.toLocaleString("en-IN")}`,
+        });
+      }
+    }
+
+    // Tasks due
+    (state.tasks || [])
       .filter((t) => !t.done && (!t.due || t.due <= today))
-      .slice(0, 3)
-      .map((t) => ({
-        key: `task-${t.id}`,
-        icon: "✅",
-        title: t.title,
-        meta: t.due ? `Daily task · ${countdownLabel(t.due)}` : "Daily task reminder",
-      }));
-    return [...deadlineAlerts, ...taskAlerts, ...scheduleAlerts].slice(0, 4);
-  }, [state.deadlines, state.docs, state.tasks, today]);
+      .slice(0, 2)
+      .forEach((t) => {
+        alerts.push({
+          key: `task-${t.id}`,
+          icon: "✅",
+          title: t.title,
+          meta: t.due ? `Task · ${countdownLabel(t.due)}` : "Daily task reminder",
+        });
+      });
+
+    return alerts.slice(0, 5);
+  }, [state.deadlines, state.attendance, state.expenses, state.ui?.budget, state.profile?.attendanceRequired, state.tasks, today]);
 
   return (
     <div className="space-y-5">

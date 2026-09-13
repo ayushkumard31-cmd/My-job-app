@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // Whole-app state in one reducer, persisted to localStorage. localStorage is
 // still the source of truth: signing in (see ./auth) only adds a Firestore
@@ -68,13 +68,13 @@ export const initialState = {
   },
   roadmap: {},      // stage/item key -> true
   focus: { settings: { focus: 25, short: 5, long: 15 }, sessions: [] },
-  // The student's own college documents (timetable, hall ticket…). Only the
+  // The student's own college documents (timetable, hall ticketâ€¦). Only the
   // metadata lives here; the PDF itself sits in Firebase Storage, or is a link.
   docs: [],
   // Reactions to shared library content. Just id lists, so they ride along on
   // the existing planner sync and keep working while signed out.
   library: { likes: [], saves: [], watched: [] },
-  // Dark by default; the header toggle still cycles system → light → dark, and a
+  // Dark by default; the header toggle still cycles system â†’ light â†’ dark, and a
   // saved choice always wins over this (see the `hydrate` merge).
   ui: { theme: "dark", accent: "indigo" },
 };
@@ -262,6 +262,12 @@ function baseReducer(state, action) {
       return { ...state, expenses: [{ id: uid("exp"), date: dateKey(), ...p }, ...state.expenses] };
     case "expense.delete":
       return { ...state, expenses: state.expenses.filter((e) => e.id !== p.id) };
+    case "xp.add":
+      return { ...state, xp: Math.max(0, (state.xp || 0) + (p.amount || 0)) };
+    case "xp.deduct":
+      return { ...state, xp: Math.max(0, (state.xp || 0) - (p.amount || 0)) };
+    case "xp.set":
+      return { ...state, xp: Math.max(0, p.amount || 0) };
     case "english.log": {
       const skill = state.english.skills[p.skill];
       if (!skill) return state;
@@ -357,7 +363,7 @@ export function AppProvider({ children }) {
     try {
       saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     } catch {
-      // corrupted storage — start fresh rather than crash
+      // corrupted storage â€” start fresh rather than crash
     }
     dispatch({ type: "hydrate", payload: saved });
     loaded.current = true;
@@ -368,7 +374,7 @@ export function AppProvider({ children }) {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
     } catch {
-      /* quota / private mode — ignore */
+      /* quota / private mode â€” ignore */
     }
   }, [state]);
 
@@ -452,7 +458,7 @@ export function attendanceAdvice(a, required = 75) {
     const canSkip = Math.floor((a.attended - r * a.total) / r);
     return canSkip > 0
       ? { text: `You can skip ${canSkip} more class${canSkip > 1 ? "es" : ""}`, tone: "ok" }
-      : { text: "Right on the line — don't skip", tone: "warn" };
+      : { text: "Right on the line â€” don't skip", tone: "warn" };
   }
   const need = Math.ceil((r * a.total - a.attended) / (1 - r));
   return { text: `Attend ${need} more in a row to reach ${required}%`, tone: "bad" };
@@ -518,3 +524,4 @@ export function seedFromGoal(profile) {
   });
   return { tasks, goals };
 }
+
