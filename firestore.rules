@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// Deploy with:  firebase deploy --only firestore:rules
+//
+// Three collections, three very different trust levels:
+//
+//   planners/{uid}  a student's own planner. Private to them.
+//   library/{id}    shared study material. World-readable once published,
+//                   writable only by admins.
+//   admins/{uid}    the admin list itself. Readable only by the account it
+//                   describes, and never writable from the client — an admin
+//                   who could add admins is a self-serve privilege escalation.
+//
+// The NEXT_PUBLIC_FIREBASE_* keys are public by design and grant nothing on
+// their own; this file is the only thing protecting the data.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+             && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /planners/{uid} {
+      allow read, write: if signedIn()
+                         && request.auth.uid == uid
+                         // A planner is one JSON blob; cap it well under the
+                         // 1 MiB document limit so a bug can't fill the project.
+                         && (request.method == 'delete'
+                             || request.resource.data.blob is string
+                             && request.resource.data.blob.size() < 900000);
+    }
+
+    // Only ever read for "is this me an admin?", so own-document reads are all
+    // that's needed. Grant admin by creating the document in the console.
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+
+    match /library/{id} {
+      // Students read published items — signed out too, which is how the rest of
+      // the app works. A list query only passes if it filters published == true,
+      // so an unpublished draft can't be swept up by a broad query.
+      allow read: if resource.data.published == true || isAdmin();
+      allow create: if isAdmin() && validItem();
+      allow update: if isAdmin() && validItem();
+      allow delete: if isAdmin();
+    }
+
+    function validItem() {
+      let d = request.resource.data;
+      return d.title is string
+             && d.title.size() > 0 && d.title.size() <= 200
+             && d.kind is string
+             && d.scope in ['subject', 'hobby']
+             && d.published is bool
+             && (!('description' in d) || d.description == null || d.description.size() <= 2000)
+             && (!('url' in d) || d.url == null || d.url.size() <= 2000);
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

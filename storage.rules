@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Deploy with:  firebase deploy --only storage
+//
+// Two trees:
+//   users/{uid}/docs/**  a student's own timetable PDFs — private to them.
+//   library/**           admin-published PDFs — world-readable, admin-writable.
+//
+// Firebase Storage needs to be enabled in the console before this deploys, and
+// on new projects that requires the Blaze plan. Without it the app still works:
+// every upload field has a "paste a link instead" fallback.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Storage rules can read Firestore, so the admin list has exactly one home.
+    function isAdmin() {
+      return signedIn()
+             && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+
+    // PDF only, 20 MB — matches the client-side check in src/lib/library.js.
+    function validPdf() {
+      return request.resource.contentType == 'application/pdf'
+             && request.resource.size < 20 * 1024 * 1024;
+    }
+
+    match /users/{uid}/docs/{file} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if signedIn() && request.auth.uid == uid
+                   && (request.resource == null || validPdf());
+    }
+
+    match /library/{file} {
+      allow read: if true;
+      allow write: if isAdmin() && (request.resource == null || validPdf());
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
