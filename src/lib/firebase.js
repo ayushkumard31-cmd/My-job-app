@@ -1,10 +1,5 @@
 "use client";
 
-// Single place where Firebase is initialised. Everything is lazy so importing
-// this module never touches the network, and the whole app still runs with the
-// env vars unset — `isFirebaseConfigured` is false and the cloud features
-// quietly switch themselves off instead of crashing.
-
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -20,60 +15,101 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-/** False when .env.local is missing — the app then stays local-only. */
+// Firebase is considered configured only when the required values exist.
 export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId,
+  firebaseConfig.apiKey &&
+    firebaseConfig.projectId &&
+    firebaseConfig.appId
 );
 
-/** The one FirebaseApp, created on first use and reused across hot reloads. */
+// Create the Firebase app only when it is actually needed.
 export function getFirebaseApp() {
-  if (!isFirebaseConfigured) return null;
-  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+  if (!isFirebaseConfigured) {
+    return null;
+  }
+
+  return getApps().length > 0
+    ? getApp()
+    : initializeApp(firebaseConfig);
 }
 
+// Firebase Authentication
 export function getFirebaseAuth() {
   const app = getFirebaseApp();
+
   return app ? getAuth(app) : null;
 }
 
+// Firestore Database
 export function getDb() {
   const app = getFirebaseApp();
+
   return app ? getFirestore(app) : null;
 }
 
-/** Null when the bucket isn't configured — callers fall back to link-only. */
+// Firebase Storage
 export function getBucket() {
   const app = getFirebaseApp();
-  if (!app || !firebaseConfig.storageBucket) return null;
+
+  if (!app || !firebaseConfig.storageBucket) {
+    return null;
+  }
+
   return getStorage(app);
 }
 
 export const isStorageConfigured = Boolean(
-  isFirebaseConfigured && firebaseConfig.storageBucket,
+  isFirebaseConfigured && firebaseConfig.storageBucket
 );
 
-// Analytics only exists in a real browser (it needs cookies + indexedDB), so it
-// is code-split and probed with isSupported() rather than imported up front.
+// Firebase Analytics
 let analyticsPromise = null;
 
 export function initAnalytics() {
-  if (typeof window === "undefined") return Promise.resolve(null);
-  if (!isFirebaseConfigured || !firebaseConfig.measurementId) return Promise.resolve(null);
+  if (typeof window === "undefined") {
+    return Promise.resolve(null);
+  }
+
+  if (
+    !isFirebaseConfigured ||
+    !firebaseConfig.measurementId
+  ) {
+    return Promise.resolve(null);
+  }
+
   if (!analyticsPromise) {
     analyticsPromise = import("firebase/analytics")
-      .then(async ({ getAnalytics, isSupported }) =>
-        (await isSupported()) ? getAnalytics(getFirebaseApp()) : null,
-      )
+      .then(async ({ getAnalytics, isSupported }) => {
+        const supported = await isSupported();
+
+        if (!supported) {
+          return null;
+        }
+
+        const app = getFirebaseApp();
+
+        if (!app) {
+          return null;
+        }
+
+        return getAnalytics(app);
+      })
       .catch(() => null);
   }
+
   return analyticsPromise;
 }
 
-/** Fire-and-forget event; a no-op when analytics is unavailable. */
+// Send an Analytics event.
+// Does nothing if Analytics isn't available.
 export function track(name, params) {
   initAnalytics().then(async (analytics) => {
-    if (!analytics) return;
+    if (!analytics) {
+      return;
+    }
+
     const { logEvent } = await import("firebase/analytics");
+
     logEvent(analytics, name, params);
   });
 }

@@ -1,10 +1,13 @@
 "use client";
 
-// Accounts. An account is entirely optional — it exists so a student's planner
-// follows them to another device. Signed out, the app behaves exactly as before
-// and everything stays in localStorage.
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -15,121 +18,199 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
-import { getFirebaseAuth, initAnalytics, isFirebaseConfigured } from "./firebase";
+
+import {
+  getFirebaseAuth,
+  initAnalytics,
+  isFirebaseConfigured,
+} from "./firebase";
 
 const Ctx = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  // `ready` = Firebase has told us whether a session exists. Until then we show
-  // neither "signed in" nor "signed out" so the UI doesn't flicker on reload.
   const [ready, setReady] = useState(!isFirebaseConfigured);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
-    if (!auth) return;
+
+    if (!auth) {
+      setReady(true);
+      return;
+    }
+
     initAnalytics();
-    return onAuthStateChanged(auth, (u) => {
-      setUser(u ? { uid: u.uid, email: u.email, name: u.displayName, photo: u.photoURL } : null);
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: firebaseUser.displayName,
+          photo: firebaseUser.photoURL,
+        });
+      } else {
+        setUser(null);
+      }
+
       setReady(true);
     });
+
+    return unsubscribe;
   }, []);
 
   const value = useMemo(
-    () => ({ user, ready, available: isFirebaseConfigured }),
-    [user, ready],
+    () => ({
+      user,
+      ready,
+      available: isFirebaseConfigured,
+    }),
+    [user, ready]
   );
+
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
-  return useContext(Ctx) ?? { user: null, ready: true, available: false };
-}
+  const context = useContext(Ctx);
 
-// --------------------------------------------------------------- actions --
-// Each returns a promise and throws an Error whose message is already
-// human-readable, so callers can just `catch (e) => setError(e.message)`.
+  if (context) {
+    return context;
+  }
+
+  return {
+    user: null,
+    ready: true,
+    available: false,
+  };
+}
 
 function requireAuth() {
   const auth = getFirebaseAuth();
-  if (!auth) throw new Error("Cloud sync isn't set up — add your Firebase keys to .env.local.");
+
+  if (!auth) {
+    throw new Error(
+      "Firebase is not configured. Check your .env.local file."
+    );
+  }
+
   return auth;
 }
 
 export async function signUpWithEmail(email, password, name) {
   const auth = requireAuth();
+
   try {
-    const { user } = await createUserWithEmailAndPassword(auth, email.trim(), password);
-    if (name?.trim()) await updateProfile(user, { displayName: name.trim() });
+    const result = await createUserWithEmailAndPassword(
+      auth,
+      email.trim(),
+      password
+    );
+
+    const user = result.user;
+
+    if (name && name.trim()) {
+      await updateProfile(user, {
+        displayName: name.trim(),
+      });
+    }
+
     return user;
-  } catch (e) {
-    throw new Error(authMessage(e));
+  } catch (error) {
+    throw new Error(authMessage(error));
   }
 }
 
 export async function signInWithEmail(email, password) {
   const auth = requireAuth();
+
   try {
-    const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
-    return user;
-  } catch (e) {
-    throw new Error(authMessage(e));
+    const result = await signInWithEmailAndPassword(
+      auth,
+      email.trim(),
+      password
+    );
+
+    return result.user;
+  } catch (error) {
+    throw new Error(authMessage(error));
   }
 }
 
 export async function signInWithGoogle() {
   const auth = requireAuth();
+
   try {
-    const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
-    return user;
-  } catch (e) {
-    throw new Error(authMessage(e));
+    const provider = new GoogleAuthProvider();
+
+    const result = await signInWithPopup(auth, provider);
+
+    return result.user;
+  } catch (error) {
+    throw new Error(authMessage(error));
   }
 }
 
 export async function sendReset(email) {
   const auth = requireAuth();
+
   try {
     await sendPasswordResetEmail(auth, email.trim());
-  } catch (e) {
-    throw new Error(authMessage(e));
+  } catch (error) {
+    throw new Error(authMessage(error));
   }
 }
 
 export async function signOutUser() {
   const auth = getFirebaseAuth();
-  if (auth) await signOut(auth);
+
+  if (auth) {
+    await signOut(auth);
+  }
 }
 
-/** Firebase error codes are not something to show a student. */
-export function authMessage(e) {
-  switch (e?.code) {
+export function authMessage(error) {
+  switch (error?.code) {
     case "auth/invalid-email":
       return "That email doesn't look right.";
+
     case "auth/missing-password":
       return "Enter a password.";
+
     case "auth/weak-password":
       return "Use at least 6 characters for the password.";
+
     case "auth/email-already-in-use":
-      return "That email already has an account — sign in instead.";
+      return "That email already has an account. Sign in instead.";
+
     case "auth/invalid-credential":
     case "auth/wrong-password":
     case "auth/user-not-found":
       return "Wrong email or password.";
+
     case "auth/too-many-requests":
       return "Too many attempts. Wait a minute and try again.";
+
     case "auth/popup-closed-by-user":
     case "auth/cancelled-popup-request":
-      return "Sign-in window closed before finishing.";
+      return "Sign-in window was closed before finishing.";
+
     case "auth/popup-blocked":
-      return "Your browser blocked the sign-in popup — allow popups for this site.";
+      return "Your browser blocked the sign-in popup. Allow popups for this site.";
+
     case "auth/network-request-failed":
       return "No connection. Check your internet and try again.";
+
     case "auth/operation-not-allowed":
-      return "That sign-in method isn't enabled in the Firebase console yet.";
+      return "This sign-in method isn't enabled in Firebase.";
+
     case "auth/unauthorized-domain":
-      return "This domain isn't in the Firebase console's authorised domains list.";
+      return "This domain isn't authorized in Firebase.";
+
+    case "auth/configuration-not-found":
+      return "Firebase Authentication is not configured correctly.";
+
     default:
-      return e?.message?.replace(/^Firebase:\s*/, "") || "Something went wrong. Try again.";
+      return error?.message || "Something went wrong. Try again.";
   }
 }
