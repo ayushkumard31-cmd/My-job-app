@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Inter font — loaded via Next.js font system as --font-inter */
+
 /* -------------------------------------------------------------------------- */
 /* Dark mode                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -83,17 +85,16 @@
 /* -------------------------------------------------------------------------- */
 
 .dark {
-  --bg: #0a0e15;
-  --surface: #131a24;
-  --surface2: #0f151e;
-  --line: #273244;
+  --bg: #07090e;
+  --surface: rgba(14, 18, 28, 0.78);
+  --surface2: rgba(22, 28, 44, 0.85);
+  --line: rgba(255, 255, 255, 0.08);
 
-  --ink: #f1f5f9;
+  --ink: #f8fafc;
 
   /*
    * IMPORTANT:
-   * These values were previously too dark.
-   * They are now light enough to be readable on dark backgrounds.
+   * Readable secondary text on dark background
    */
   --muted: #94a3b8;
 
@@ -106,14 +107,14 @@
   );
 
   --shadow:
-    0 1px 2px rgb(0 0 0 / 0.4),
-    0 8px 24px rgb(0 0 0 / 0.35);
+    0 1px 3px rgb(0 0 0 / 0.5),
+    0 12px 32px rgb(0 0 0 / 0.4);
 
   /* shadcn variables */
   --accent-foreground: oklch(0.985 0 0);
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.12 0.01 260);
   --border: oklch(1 0 0 / 10%);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.16 0.01 260);
   --card-foreground: oklch(0.985 0 0);
 
   --chart-1: oklch(0.87 0 0);
@@ -130,7 +131,7 @@
   /* Readable secondary text */
   --muted-foreground: oklch(0.708 0 0);
 
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.16 0.01 260);
   --popover-foreground: oklch(0.985 0 0);
 
   --primary: oklch(0.922 0 0);
@@ -138,11 +139,11 @@
 
   --ring: oklch(0.556 0 0);
 
-  --secondary: oklch(0.269 0 0);
+  --secondary: oklch(0.22 0.01 260);
   --secondary-foreground: oklch(0.985 0 0);
 
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar: oklch(0.14 0.01 260);
+  --sidebar-accent: oklch(0.22 0.01 260);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-foreground: oklch(0.985 0 0);
@@ -193,9 +194,10 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
 
-  --font-sans: "Minecraft", "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono);
-  --font-heading: "Minecraft", "Segoe UI", sans-serif;
+  --font-sans: var(--font-inter), var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-heading: var(--font-inter), var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-inter: var(--font-inter), "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -251,8 +253,12 @@
 /* -------------------------------------------------------------------------- */
 
 html {
-  color-scheme: light;
-  font-family: "Minecraft", "Segoe UI", sans-serif;
+  color-scheme: dark;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.011em;
 }
 
 html.dark {
@@ -260,10 +266,24 @@ html.dark {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--ink);
-  font-family: "Minecraft", "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  min-height: 100vh;
+}
+
+.dark body,
+html.dark body {
+  background-color: #07090e;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 85% 12%, rgba(220, 38, 38, 0.16) 0%, rgba(136, 19, 55, 0.08) 40%, transparent 70%),
+    radial-gradient(ellipse 55% 45% at 15% 85%, rgba(159, 18, 57, 0.10) 0%, transparent 60%),
+    url('/bg-mesh.jpg');
+  background-repeat: no-repeat;
+  background-position: top right, bottom left, center center;
+  background-size: 100% 100%, 100% 100%, cover;
+  background-attachment: fixed;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -275,6 +295,8 @@ body {
   border: 1px solid var(--line);
   border-radius: 1rem;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* -------------------------------------------------------------------------- */
