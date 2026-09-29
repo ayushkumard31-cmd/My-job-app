@@ -254,26 +254,36 @@ export default function NotificationsPage() {
           <div>
             <div className="text-sm font-bold">
               {permission === "granted"
-                ? "Browser notifications are enabled"
+                ? "Desktop & mobile notifications are enabled"
                 : permission === "denied"
                 ? "Notifications are blocked by browser settings"
                 : "Enable desktop & mobile notifications"}
             </div>
             <p className="text-xs" style={{ color: "var(--muted)" }}>
               {permission === "granted"
-                ? "You will receive system reminders for exams, deadlines, and attendance alerts."
+                ? "You will receive system reminders for exams, deadlines, and attendance alerts. To disable, click the button or change browser settings."
                 : "Allow permissions so you never miss an upcoming exam or attendance warning."}
             </p>
           </div>
         </div>
-        <div>
-          {permission !== "granted" ? (
-            <button className="btn btn-primary btn-sm" onClick={requestPermission}>
-              🔔 Enable Notifications
+        <div className="flex items-center gap-2">
+          {permission === "granted" ? (
+            <button
+              className="btn btn-sm"
+              style={{
+                background: "rgba(239, 68, 68, 0.15)",
+                color: "#f87171",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+              }}
+              onClick={() => {
+                alert("To disable notifications, go to your browser settings:\n\n• Click the lock/info icon in the address bar\n• Find 'Notifications' permission\n• Set it to 'Block' or 'Ask'\n\nThen refresh this page.");
+              }}
+            >
+              🔕 Disable Notifications
             </button>
           ) : (
-            <button className="btn btn-sm" onClick={sendTestNotification}>
-              {testSent ? "Sent! ✨" : "Send Test Alert"}
+            <button className="btn btn-primary btn-sm" onClick={requestPermission}>
+              🔔 Enable Notifications
             </button>
           )}
         </div>

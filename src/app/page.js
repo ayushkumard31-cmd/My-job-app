@@ -62,7 +62,7 @@ function buildSplineAreaPath(points, height, bottomPadding) {
 }
 
 /* ─────────────────────────────────────────────
-   Component: Ultra-Attractive Growth Graph
+   Component: Digital Wellbeing Growth Graph
 ───────────────────────────────────────────── */
 function GrowthGraph({ growth, week }) {
   const [hoveredIdx, setHoveredIdx] = useState(null);
@@ -144,7 +144,7 @@ function GrowthGraph({ growth, week }) {
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted">
-              Weekly Momentum & Growth
+              Digital Wellbeing Growth
             </h2>
           </div>
           <div className="mt-1 flex items-baseline gap-2.5">
@@ -370,7 +370,7 @@ function GrowthGraph({ growth, week }) {
         <span>⏱️ Focus: <strong className="text-ink">{fmtDuration(week.focusMins)}</strong></span>
         <span>✅ Tasks: <strong className="text-ink">{week.tasksDone} done</strong></span>
         <span className="text-accent font-semibold">
-          Daily routines & skills count toward growth
+          Daily routines & skills count toward wellbeing growth
         </span>
       </div>
     </div>
