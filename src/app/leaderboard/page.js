@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Card, Empty, SectionHeader, Stat } from "@/components/ui";
+import { Card, Empty, ProgressBar, SectionHeader } from "@/components/ui";
 import { useApp } from "@/lib/store";
+import { Trophy, Flame, Timer, Zap, ChevronRight } from "lucide-react";
 
 function xpToLevel(xp = 0) {
   const level = Math.floor(Math.sqrt(xp / 50)) + 1;
@@ -34,6 +35,55 @@ const CAMPUS_PEERS = [
   { id: "peer_6", name: "Arjun Verma", branch: "ME · Sem 5", xp: 480, weeklyXp: 150, streak: 4, focusMins: 180, avatar: "🚀", badge: "🧭" },
   { id: "peer_7", name: "Tanvi Patel", branch: "IT · Sem 3", xp: 350, weeklyXp: 110, streak: 3, focusMins: 140, avatar: "📚", badge: "🧭" },
 ];
+
+function getDisplayValue(entry, tab) {
+  if (tab === "weekly") return `${entry.weeklyXp} XP`;
+  if (tab === "today") return `${entry.focusMins}m focus`;
+  return `${entry.xp} XP`;
+}
+
+/* ─────────────────────────────────────────────
+   Podium card for top 3
+───────────────────────────────────────────── */
+function PodiumCard({ entry, position, tab }) {
+  const isChampion = position === 1;
+  const medalEmoji = position === 1 ? "🥇" : position === 2 ? "🥈" : "🥉";
+  const borderColor = position === 1 ? "#f59e0b" : position === 2 ? "#94a3b8" : "#d97706";
+  const heights = { 1: "h-36 sm:h-40", 2: "h-28 sm:h-32", 3: "h-24 sm:h-28" };
+
+  return (
+    <div className="flex flex-col items-center text-center">
+      <span className={`${isChampion ? "text-3xl" : "text-2xl"} mb-1.5`}>{entry.avatar}</span>
+      <div className={`${isChampion ? "text-sm font-bold text-accent" : "text-xs font-semibold text-ink"} truncate max-w-full`}>
+        {entry.name}
+      </div>
+      <div className="text-[10px] text-muted mb-1">{entry.branch}</div>
+
+      {/* Podium block */}
+      <div
+        className={`w-full mt-1 rounded-t-2xl flex flex-col items-center justify-center p-3 border transition-all ${heights[position]}`}
+        style={{
+          background: `linear-gradient(180deg, color-mix(in srgb, ${borderColor} ${isChampion ? "22%" : "15%"}, transparent), transparent)`,
+          borderColor: `color-mix(in srgb, ${borderColor} 50%, transparent)`,
+        }}
+      >
+        <span className={isChampion ? "text-3xl" : "text-2xl"}>{medalEmoji}</span>
+        <span className={`${isChampion ? "text-sm font-bold text-amber-400" : "text-xs font-bold text-ink"} mt-1`}>
+          {isChampion ? "#1 Champion" : `#${position}`}
+        </span>
+        <span className="text-xs font-bold text-accent mt-0.5">
+          {getDisplayValue(entry, tab)}
+        </span>
+        {/* Supporting stats */}
+        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted">
+          <span>🔥 {entry.streak}d</span>
+          <span>·</span>
+          <span>{Math.round(entry.focusMins / 60)}h focus</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function LeaderboardPage() {
   const { state } = useApp();
@@ -101,35 +151,40 @@ export default function LeaderboardPage() {
     { title: "Campus Legend", desc: "Reach 1500 XP", icon: "👑", unlocked: userXp >= 1500, current: Math.min(1500, userXp), max: 1500 },
   ];
 
+  const levelProgressPct = userLvl.needed > 0 ? Math.min(100, (userLvl.progress / userLvl.needed) * 100) : 100;
+
   return (
     <div className="space-y-6">
+      {/* ── Page Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 tracking-tight">
             <span>Campus Leaderboard</span>
-            <span className="text-xl">🏆</span>
+            <Trophy className="text-accent" size={22} />
           </h1>
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
+          <p className="text-sm text-muted mt-0.5">
             Compete with batchmates · Complete daily blocks & focus sessions to climb the ranks
           </p>
         </div>
         <Link href="/day" className="btn btn-primary btn-sm">
-          + Earn XP in My Day
+          <Zap size={14} />
+          Earn XP in My Day
         </Link>
       </header>
 
-      {/* User's Current Rank Card */}
+      {/* ── User's Current Rank Card ── */}
       <Card
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, transparent), transparent)",
-          borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent)",
+          borderColor: "color-mix(in srgb, var(--accent) 30%, transparent)",
         }}
       >
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Left: Rank + Info */}
           <div className="flex items-center gap-3">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0 shadow-lg"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold shrink-0"
               style={{
                 background: "linear-gradient(135deg, var(--accent), #8b5cf6)",
                 color: "#fff",
@@ -137,48 +192,50 @@ export default function LeaderboardPage() {
             >
               #{userRanking.rank}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold">{userName}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "var(--accent-soft)", color: "var(--ink)" }}>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm sm:text-base font-bold truncate">{userName}</span>
+                <span
+                  className="text-[11px] px-2 py-0.5 rounded-full font-medium leading-none shrink-0"
+                  style={{ background: "var(--accent-soft)", color: "var(--ink)" }}
+                >
                   {userLvl.badge} Level {userLvl.level}
                 </span>
               </div>
-              <p className="text-xs" style={{ color: "var(--muted)" }}>
+              <p className="text-xs text-muted mt-0.5">
                 {userLvl.rank} · {userBranch}
               </p>
-              <div className="flex items-center gap-3 text-xs mt-1 font-medium">
-                <span style={{ color: "var(--accent)" }}>✨ {userXp} Total XP</span>
-                <span style={{ color: "#f59e0b" }}>🔥 {userRanking.streak} Day Streak</span>
-                <span style={{ color: "#10b981" }}>⏱️ {userFocusMins}m Focused</span>
+              <div className="flex items-center gap-3 text-xs mt-1.5 font-medium flex-wrap">
+                <span className="flex items-center gap-1" style={{ color: "var(--accent)" }}>
+                  <Zap size={12} /> {userXp} Total XP
+                </span>
+                <span className="flex items-center gap-1" style={{ color: "#f59e0b" }}>
+                  <Flame size={12} /> {userRanking.streak} Day Streak
+                </span>
+                <span className="flex items-center gap-1" style={{ color: "#10b981" }}>
+                  <Timer size={12} /> {userFocusMins}m Focused
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="min-w-[180px] flex-1 sm:max-w-xs space-y-1">
+          {/* Right: Level Progress */}
+          <div className="min-w-[160px] sm:max-w-xs space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span style={{ color: "var(--muted)" }}>Level Progress</span>
+              <span className="text-muted">Level Progress</span>
               <span className="font-semibold">{userLvl.progress} / {userLvl.needed} XP</span>
             </div>
-            <div className="bar" style={{ height: "0.55rem" }}>
-              <i
-                style={{
-                  width: `${userLvl.needed > 0 ? Math.min(100, (userLvl.progress / userLvl.needed) * 100) : 100}%`,
-                  background: "linear-gradient(90deg, var(--accent), #8b5cf6)",
-                  transition: "width 0.5s ease",
-                }}
-              />
-            </div>
-            <p className="text-[11px] text-right" style={{ color: "var(--muted)" }}>
+            <ProgressBar value={levelProgressPct} color="linear-gradient(90deg, var(--accent), #8b5cf6)" />
+            <p className="text-[11px] text-right text-muted">
               {Math.max(0, userLvl.needed - userLvl.progress)} XP to Level {userLvl.level + 1}
             </p>
           </div>
         </div>
       </Card>
 
-      {/* Tabs & Branch Filter */}
+      {/* ── Tabs & Branch Filter ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex rounded-xl p-1 border border-line bg-surface">
+        <div className="flex rounded-xl p-1 border border-line bg-surface/80 backdrop-blur-sm">
           {[
             { id: "all-time", label: "All-Time XP" },
             { id: "weekly", label: "This Week" },
@@ -186,7 +243,7 @@ export default function LeaderboardPage() {
           ].map((t) => (
             <button
               key={t.id}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
               style={
                 tab === t.id
                   ? { background: "var(--accent)", color: "#fff" }
@@ -199,8 +256,8 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs" style={{ color: "var(--muted)" }}>Branch:</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-muted">Branch:</span>
           {["all", "CSE", "IT", "ECE"].map((b) => (
             <button
               key={b}
@@ -214,78 +271,55 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Podium Top 3 */}
+      {/* ── Podium Top 3 ── */}
       {topThree.length >= 3 && (
         <div>
-          <SectionHeader title="Top Performers 🌟" />
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end pt-4 pb-2">
-            {/* Rank 2 (Silver) */}
-            <div className="flex flex-col items-center text-center">
-              <span className="text-2xl mb-1">{topThree[1].avatar}</span>
-              <div className="text-xs font-bold truncate max-w-full">{topThree[1].name}</div>
-              <div className="text-[10px]" style={{ color: "var(--muted)" }}>{topThree[1].branch}</div>
-              <div
-                className="w-full mt-2 rounded-t-2xl flex flex-col items-center justify-center p-3 border border-line shadow-sm"
-                style={{
-                  height: "120px",
-                  background: "linear-gradient(180deg, color-mix(in srgb, #94a3b8 20%, transparent), transparent)",
-                  borderColor: "#94a3b8",
-                }}
-              >
-                <span className="text-2xl">🥈</span>
-                <span className="text-xs font-bold mt-1">#2</span>
-                <span className="text-xs font-bold text-accent">
-                  {tab === "weekly" ? `${topThree[1].weeklyXp} XP` : tab === "today" ? `${topThree[1].focusMins}m` : `${topThree[1].xp} XP`}
-                </span>
-              </div>
-            </div>
+          <SectionHeader title="Top Performers" />
 
-            {/* Rank 1 (Gold) */}
-            <div className="flex flex-col items-center text-center">
-              <span className="text-3xl mb-1">{topThree[0].avatar}</span>
-              <div className="text-sm font-extrabold truncate max-w-full text-accent">{topThree[0].name}</div>
-              <div className="text-[10px]" style={{ color: "var(--muted)" }}>{topThree[0].branch}</div>
-              <div
-                className="w-full mt-2 rounded-t-2xl flex flex-col items-center justify-center p-4 border border-line shadow-md"
-                style={{
-                  height: "150px",
-                  background: "linear-gradient(180deg, color-mix(in srgb, #f59e0b 25%, transparent), transparent)",
-                  borderColor: "#f59e0b",
-                }}
-              >
-                <span className="text-3xl">🥇</span>
-                <span className="text-sm font-extrabold mt-1 text-amber-400">#1 Champion</span>
-                <span className="text-sm font-extrabold" style={{ color: "var(--accent)" }}>
-                  {tab === "weekly" ? `${topThree[0].weeklyXp} XP` : tab === "today" ? `${topThree[0].focusMins}m` : `${topThree[0].xp} XP`}
-                </span>
-              </div>
-            </div>
+          {/* Desktop Podium */}
+          <div className="hidden sm:grid grid-cols-3 gap-3 items-end pt-4 pb-2">
+            <PodiumCard entry={topThree[1]} position={2} tab={tab} />
+            <PodiumCard entry={topThree[0]} position={1} tab={tab} />
+            <PodiumCard entry={topThree[2]} position={3} tab={tab} />
+          </div>
 
-            {/* Rank 3 (Bronze) */}
-            <div className="flex flex-col items-center text-center">
-              <span className="text-2xl mb-1">{topThree[2].avatar}</span>
-              <div className="text-xs font-bold truncate max-w-full">{topThree[2].name}</div>
-              <div className="text-[10px]" style={{ color: "var(--muted)" }}>{topThree[2].branch}</div>
+          {/* Mobile: Stacked cards */}
+          <div className="sm:hidden space-y-2">
+            {topThree.map((entry, idx) => (
               <div
-                className="w-full mt-2 rounded-t-2xl flex flex-col items-center justify-center p-3 border border-line shadow-sm"
-                style={{
-                  height: "95px",
-                  background: "linear-gradient(180deg, color-mix(in srgb, #d97706 20%, transparent), transparent)",
-                  borderColor: "#d97706",
-                }}
+                key={entry.id}
+                className="card p-3 flex items-center gap-3"
+                style={
+                  idx === 0
+                    ? { borderColor: "color-mix(in srgb, #f59e0b 40%, transparent)" }
+                    : {}
+                }
               >
-                <span className="text-2xl">🥉</span>
-                <span className="text-xs font-bold mt-1">#3</span>
-                <span className="text-xs font-bold text-accent">
-                  {tab === "weekly" ? `${topThree[2].weeklyXp} XP` : tab === "today" ? `${topThree[2].focusMins}m` : `${topThree[2].xp} XP`}
+                <span className="text-2xl shrink-0">
+                  {idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉"}
                 </span>
+                <span className="text-xl shrink-0">{entry.avatar}</span>
+                <div className="min-w-0 flex-1">
+                  <div className={`text-sm font-semibold truncate ${idx === 0 ? "text-accent" : "text-ink"}`}>
+                    {entry.name}
+                  </div>
+                  <div className="text-[10px] text-muted">{entry.branch}</div>
+                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted">
+                    <span>🔥 {entry.streak}d</span>
+                    <span>{Math.round(entry.focusMins / 60)}h focus</span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-sm font-bold text-accent">{getDisplayValue(entry, tab)}</div>
+                  <div className="text-[10px] text-muted">{entry.badge} Tier</div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Full Leaderboard Table */}
+      {/* ── Full Leaderboard Table ── */}
       <section>
         <SectionHeader title="All Campus Rankings" />
         <Card className="divide-y divide-line p-0 overflow-hidden">
@@ -294,13 +328,13 @@ export default function LeaderboardPage() {
             return (
               <div
                 key={student.id}
-                className={`flex items-center gap-3 p-3 transition ${
-                  isUser ? "bg-accent/10 font-semibold" : "hover:bg-surface-elevated"
+                className={`flex items-center gap-3 px-3 py-3 sm:px-4 transition ${
+                  isUser ? "font-semibold" : "hover:bg-surface2/50"
                 }`}
-                style={isUser ? { background: "color-mix(in srgb, var(--accent) 12%, transparent)" } : {}}
+                style={isUser ? { background: "color-mix(in srgb, var(--accent) 10%, transparent)" } : {}}
               >
                 {/* Rank number */}
-                <div className="w-8 text-center font-bold text-sm shrink-0">
+                <div className="w-7 text-center font-bold text-sm shrink-0">
                   {student.rank === 1 ? "🥇" : student.rank === 2 ? "🥈" : student.rank === 3 ? "🥉" : `#${student.rank}`}
                 </div>
 
@@ -312,24 +346,26 @@ export default function LeaderboardPage() {
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-sm font-semibold">{student.name}</span>
                     {isUser && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-accent text-white shrink-0">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-accent text-white shrink-0 leading-none">
                         YOU
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs" style={{ color: "var(--muted)" }}>
+                  <div className="flex items-center gap-2 text-[11px] text-muted">
                     <span>{student.branch}</span>
                     <span>·</span>
-                    <span>🔥 {student.streak}d streak</span>
+                    <span className="flex items-center gap-0.5">
+                      <Flame size={10} /> {student.streak}d streak
+                    </span>
                   </div>
                 </div>
 
                 {/* Score / XP */}
                 <div className="text-right shrink-0">
-                  <div className="text-sm font-extrabold" style={{ color: "var(--accent)" }}>
-                    {tab === "weekly" ? `${student.weeklyXp} XP` : tab === "today" ? `${student.focusMins}m focus` : `${student.xp} XP`}
+                  <div className="text-sm font-bold text-accent">
+                    {getDisplayValue(student, tab)}
                   </div>
-                  <div className="text-[10px]" style={{ color: "var(--muted)" }}>
+                  <div className="text-[10px] text-muted">
                     {student.badge} Tier
                   </div>
                 </div>
@@ -339,6 +375,7 @@ export default function LeaderboardPage() {
                   <button
                     className="btn btn-ghost btn-sm shrink-0 text-xs px-2"
                     title="Send a cheer!"
+                    aria-label={`Cheer for ${student.name}`}
                     onClick={() => handleCheer(student.id)}
                   >
                     🙌 {cheers[student.id] ? `+${cheers[student.id]}` : ""}
@@ -350,7 +387,7 @@ export default function LeaderboardPage() {
         </Card>
       </section>
 
-      {/* Badges & Achievements Section */}
+      {/* ── Badges & Achievements Section ── */}
       <section>
         <SectionHeader title="Your Badges & Achievements 🎖️" />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -360,8 +397,8 @@ export default function LeaderboardPage() {
               className="flex items-start gap-3 relative overflow-hidden"
               style={
                 a.unlocked
-                  ? { borderColor: "color-mix(in srgb, var(--accent) 35%, transparent)" }
-                  : { opacity: 0.7 }
+                  ? { borderColor: "color-mix(in srgb, var(--accent) 30%, transparent)" }
+                  : { opacity: 0.6 }
               }
             >
               <div
@@ -378,18 +415,18 @@ export default function LeaderboardPage() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold truncate">{a.title}</h3>
                   <span
-                    className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase"
+                    className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase leading-none shrink-0"
                     style={{
-                      background: a.unlocked ? "#10b98120" : "var(--line)",
+                      background: a.unlocked ? "rgba(16, 185, 129, 0.15)" : "var(--line)",
                       color: a.unlocked ? "#10b981" : "var(--muted)",
                     }}
                   >
                     {a.unlocked ? "Unlocked" : "Locked"}
                   </span>
                 </div>
-                <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{a.desc}</p>
+                <p className="text-xs mt-0.5 text-muted">{a.desc}</p>
                 <div className="mt-2">
-                  <div className="bar" style={{ height: "0.35rem" }}>
+                  <div className="bar" style={{ height: "0.3rem" }}>
                     <i
                       style={{
                         width: `${Math.min(100, Math.round((a.current / a.max) * 100))}%`,
@@ -397,7 +434,7 @@ export default function LeaderboardPage() {
                       }}
                     />
                   </div>
-                  <div className="flex justify-between text-[10px] mt-1" style={{ color: "var(--muted)" }}>
+                  <div className="flex justify-between text-[10px] mt-1 text-muted">
                     <span>Progress</span>
                     <span>{a.current} / {a.max}</span>
                   </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, Empty, Field, Modal, SectionHeader, Stat } from "@/components/ui";
+import { Card, Empty, Field, Modal, PageHeader, SectionHeader, Stat } from "@/components/ui";
+import { Plus, Trash2 } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { dateKey, monthLabel } from "@/lib/time";
 
@@ -135,11 +136,11 @@ function TodayExpenses({ expenses, onDelete }) {
                   </span>
 
                   <button
-                    className="btn btn-ghost btn-sm"
+                    className="btn btn-ghost btn-sm text-muted opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
                     onClick={() => onDelete(expense.id)}
                     title="Delete expense"
                   >
-                    ✕
+                    <Trash2 size={16} />
                   </button>
                 </div>
               );
@@ -316,27 +317,16 @@ export default function MoneyManagement() {
 
       {/* HEADER */}
 
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">
-            Money Management 💰
-          </h1>
-
-          <p
-            className="text-sm"
-            style={{ color: "var(--muted)" }}
-          >
-            Track your daily expenses and monthly bills.
-          </p>
-        </div>
-
-        <button
-          className="btn btn-primary"
-          onClick={openAddExpense}
-        >
-          + Add Expense
-        </button>
-      </header>
+      <PageHeader
+        title="Money Management"
+        emoji="💰"
+        subtitle="Track your daily expenses and monthly bills."
+        action={
+          <button className="btn btn-primary" onClick={openAddExpense}>
+            <Plus size={16} /> Add Expense
+          </button>
+        }
+      />
 
       {/* DAILY EXPENSE AT TOP */}
 
@@ -461,12 +451,13 @@ export default function MoneyManagement() {
                     </strong>
 
                     <button
-                      className="btn btn-ghost btn-sm"
+                      className="btn btn-ghost btn-sm text-muted"
                       onClick={() =>
                         deleteExpense(expense.id)
                       }
+                      title="Delete expense"
                     >
-                      ✕
+                      <Trash2 size={16} />
                     </button>
 
                   </Card>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Card, Field, Ring, SectionHeader, Segmented, Stat } from "@/components/ui";
+import { Card, Empty, Field, PageHeader, Ring, SectionHeader, Segmented, Stat } from "@/components/ui";
+import { Play, Pause, RotateCcw, SkipForward } from "lucide-react";
 import { blocksFor, focusMinutes, useApp, weekStats } from "@/lib/store";
 import { dateKey, fmtDuration } from "@/lib/time";
 
@@ -131,12 +132,11 @@ export default function Focus() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Focus timer</h1>
-        <p className="text-sm text-muted">
-          {settings.focus} minutes of work, {settings.short} minutes off. Four rounds earn a long break.
-        </p>
-      </header>
+      <PageHeader
+        title="Focus Timer"
+        emoji="⏱️"
+        subtitle={`${settings.focus} minutes of work, ${settings.short} minutes off. Four rounds earn a long break.`}
+      />
 
       <Card className="flex flex-col items-center gap-4 py-8">
         <Segmented
@@ -158,15 +158,21 @@ export default function Focus() {
           sub={`Round ${round + 1} · ${PHASES[phase].label}`}
         />
 
-        <div className="flex gap-2">
-          <button className="btn btn-primary px-6" onClick={() => setRunning((r) => !r)}>
-            {running ? "⏸ Pause" : left === duration ? "▶ Start" : "▶ Resume"}
+        <div className="flex gap-2.5">
+          <button className="btn btn-primary px-6 shadow-md shadow-accent/20" onClick={() => setRunning((r) => !r)}>
+            {running ? (
+              <><Pause size={16} /> Pause</>
+            ) : left === duration ? (
+              <><Play size={16} /> Start</>
+            ) : (
+              <><Play size={16} /> Resume</>
+            )}
           </button>
-          <button className="btn" onClick={() => reset(phase)}>
-            ↺ Reset
+          <button className="btn px-4" onClick={() => reset(phase)}>
+            <RotateCcw size={16} className="text-muted" /> Reset
           </button>
-          <button className="btn" onClick={complete} title="Skip to the next phase">
-            ⏭ Skip
+          <button className="btn px-4" onClick={complete} title="Skip to the next phase">
+            <SkipForward size={16} className="text-muted" /> Skip
           </button>
         </div>
 
@@ -236,9 +242,11 @@ export default function Focus() {
             ))}
           </ul>
         ) : (
-          <p className="py-2 text-sm text-muted">
-            No sessions yet today. Start one — even 25 minutes counts.
-          </p>
+          <Empty
+            emoji="🌱"
+            title="No sessions yet today"
+            hint="Start a focus session — even 25 minutes makes a difference."
+          />
         )}
       </Card>
     </div>

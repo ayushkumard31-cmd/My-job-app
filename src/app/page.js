@@ -112,29 +112,14 @@ function GrowthGraph({ growth, week }) {
   return (
     <div
       className="card relative flex flex-col justify-between overflow-hidden p-4 sm:p-5"
-      style={{
-        background: "rgba(14, 18, 28, 0.78)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-        boxShadow: "0 12px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-      }}
     >
-      {/* Ambient background glow matching crimson silk wallpaper */}
+      {/* Subtle ambient glow */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full"
+        className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(244, 63, 94, 0.22) 0%, rgba(99, 102, 241, 0.08) 60%, transparent 80%)",
-          filter: "blur(32px)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-12 -bottom-12 h-36 w-36 rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(220, 38, 38, 0.15) 0%, transparent 70%)",
-          filter: "blur(28px)",
+          background: "radial-gradient(circle, rgba(244, 63, 94, 0.12) 0%, rgba(99, 102, 241, 0.05) 60%, transparent 80%)",
+          filter: "blur(40px)",
         }}
       />
 
@@ -142,16 +127,16 @@ function GrowthGraph({ growth, week }) {
       <div className="relative z-10 flex flex-wrap items-start justify-between gap-3 mb-2">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
+            <span className="flex h-2 w-2 rounded-full bg-rose-500/80" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted">
               Digital Wellbeing Growth
             </h2>
           </div>
           <div className="mt-1 flex items-baseline gap-2.5">
-            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">
-              {todayScore}%
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink">
+              {todayScore > 0 ? `${todayScore}%` : "—"}
             </span>
-            <span className="text-xs text-muted font-medium">today&apos;s score</span>
+            <span className="text-[11px] text-muted font-medium">{todayScore > 0 ? "today\u2019s score" : "no data yet"}</span>
             <span
               className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
               style={{
@@ -384,13 +369,6 @@ function TodayScheduleCard({ blocks, doneSet, now, today, dispatch, progress, up
   return (
     <div
       className="card relative flex flex-col justify-between overflow-hidden p-4 sm:p-5"
-      style={{
-        background: "rgba(14, 18, 28, 0.78)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-        boxShadow: "0 12px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-      }}
     >
       {/* Header */}
       <div>
@@ -586,12 +564,6 @@ function GoalsSection({ state, today }) {
         {/* Daily Goals Card */}
         <div
           className="card relative flex flex-col justify-between p-4 sm:p-5 overflow-hidden"
-          style={{
-            background: "rgba(14, 18, 28, 0.78)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-          }}
         >
           <div>
             <div className="flex items-center justify-between gap-2 mb-2">
@@ -649,12 +621,6 @@ function GoalsSection({ state, today }) {
         {/* Weekly Goals Card */}
         <div
           className="card relative flex flex-col justify-between p-4 sm:p-5 overflow-hidden"
-          style={{
-            background: "rgba(14, 18, 28, 0.78)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-          }}
         >
           <div>
             <div className="flex items-center justify-between gap-2 mb-2">
@@ -791,19 +757,19 @@ export default function Dashboard() {
       {/* ══════════════════════════════════════
           1. HEADER — Greeting & Date
       ══════════════════════════════════════ */}
-      <header className="pb-1">
-        <p className="text-xs font-bold uppercase tracking-wider text-muted mb-1">
-          {greeting(now)},
+      <header className="pb-2">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-muted mb-1">
+          {greeting(now)}
         </p>
-        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-ink mb-1">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink mb-0.5">
           {state.profile.name ? state.profile.name : "Still up"} 👋
         </h1>
-        <p className="text-xs sm:text-sm text-muted mb-2">
+        <p className="text-xs text-muted mb-2">
           {longDate()}
         </p>
         <div className="flex items-center gap-2">
-          <span className="inline-block h-0.5 w-7 rounded bg-gradient-to-r from-rose-500 to-indigo-500" />
-          <p className="text-xs text-muted italic">
+          <span className="inline-block h-0.5 w-5 rounded bg-gradient-to-r from-rose-500/70 to-indigo-500/70" />
+          <p className="text-[11px] text-muted italic">
             Small steps every day lead to big dreams.
           </p>
         </div>
@@ -845,12 +811,6 @@ export default function Dashboard() {
         {/* Open Tasks Card */}
         <div
           className="card md:col-span-2 p-4 sm:p-5"
-          style={{
-            background: "rgba(14, 18, 28, 0.78)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-          }}
         >
           <div className="flex items-center justify-between gap-2 mb-3">
             <div>
@@ -903,12 +863,6 @@ export default function Dashboard() {
         {/* Quick Snapshot Card */}
         <div
           className="card p-4 sm:p-5 flex flex-col justify-between gap-3"
-          style={{
-            background: "rgba(14, 18, 28, 0.78)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-          }}
         >
           <div>
             <h2 className="section-title mb-2">Snapshot</h2>

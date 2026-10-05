@@ -226,6 +226,26 @@ function subjectPack(branch, semester, subject) {
     }),
   ];
 
+  if (Number(semester) === 3 && subject === "Mathematics III") {
+    if (branch === "cse" || branch === "it") {
+      pack.push(
+        at("pyq", 1, {
+          title: "Mathematics 3 (Differential Calculus) 2025 PYQ",
+          url: "https://www.makaut.com/papers/btech-cse-3-sem-mathematics-3-differential-calculus-bs-m301-2025.html",
+          description: "MAKAUT Mathematics 3 Differential Calculus previous year question paper.",
+        })
+      );
+    } else {
+      pack.push(
+        at("pyq", 1, {
+          title: "Mathematics 3 (BS-M301) 2026 PYQ",
+          url: "/papers/btech-3-sem-mathematics-3-bs-m301-2026.pdf",
+          description: "MAKAUT Mathematics 3 previous year question paper.",
+        })
+      );
+    }
+  }
+
   if (PRACTICAL.test(subject)) {
     pack.push(
       at("lab", 0, {

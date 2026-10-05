@@ -9,7 +9,8 @@
 // in the shared library and an admin publishes it once.
 
 import { useMemo, useState } from "react";
-import { Card, Empty, Field, Modal, Segmented } from "@/components/ui";
+import { Card, Empty, Field, Modal, PageHeader, Segmented } from "@/components/ui";
+import { Plus, FileText, RefreshCw, Trash2 } from "lucide-react";
 import {
   BranchSelector,
   CloudNote,
@@ -50,12 +51,11 @@ export default function CollegeDocs() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">College Documents</h1>
-        <p className="text-sm text-muted">
-          Your timetable, your syllabus, and your university&rsquo;s own paperwork.
-        </p>
-      </header>
+      <PageHeader
+        title="College Documents"
+        emoji="🏛️"
+        subtitle="Your timetable, your syllabus, and your university's own paperwork."
+      />
 
       <Segmented options={TABS} value={tab} onChange={setTab} />
 
@@ -146,7 +146,7 @@ function ScheduleTab() {
           </p>
         </div>
         <button className="btn btn-primary" onClick={() => setEditing({})}>
-          ＋ Add document
+          <Plus size={16} /> Add document
         </button>
       </Card>
 
@@ -217,10 +217,10 @@ function DocCard({ doc, onReplace, onDelete }) {
             </a>
           ) : null}
           <button className="btn btn-sm" onClick={onReplace}>
-            Replace
+            <RefreshCw size={14} /> Replace
           </button>
-          <button className="btn btn-ghost btn-sm text-muted" onClick={onDelete}>
-            Delete
+          <button className="btn btn-ghost btn-sm text-muted hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/30 transition-colors" onClick={onDelete}>
+            <Trash2 size={14} /> Delete
           </button>
         </div>
       </div>

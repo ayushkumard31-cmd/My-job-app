@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, Empty, Field, Modal, ProgressBar, SectionHeader, Segmented } from "@/components/ui";
+import { Card, Empty, Field, Modal, PageHeader, ProgressBar, SectionHeader, Segmented } from "@/components/ui";
+import { Plus, Minus, Trash2, CheckCircle2 } from "lucide-react";
 import { goalById } from "@/lib/catalog";
 import { buildRoadmap, currentStage } from "@/lib/generator";
 import { goalProgress, useApp } from "@/lib/store";
@@ -38,12 +39,11 @@ export default function Goals() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="text-2xl font-bold">Goals</h1>
-        <p className="text-sm text-muted">
-          The long-term plan, broken into months — and the small things you do every day.
-        </p>
-      </header>
+      <PageHeader
+        title="Goals & Roadmap"
+        emoji="🎯"
+        subtitle="The long-term plan, broken into months — and the small things you do every day."
+      />
 
       {/* career goal */}
       <Card>
@@ -132,13 +132,13 @@ export default function Goals() {
           title="Daily & weekly goals"
           action={
             <button
-              className="btn btn-sm"
+              className="btn btn-sm btn-primary"
               onClick={() => {
                 setDraft({ label: "", emoji: "🎯", type: "daily", target: 1, unit: "times" });
                 setOpen(true);
               }}
             >
-              + Add
+              <Plus size={14} /> Add
             </button>
           }
         />
@@ -148,7 +148,7 @@ export default function Goals() {
               const p = goalProgress(g, today);
               const keys = weekKeys();
               return (
-                <Card key={g.id}>
+                <Card key={g.id} className="group transition hover:border-accent/30">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{g.emoji}</span>
                     <button
@@ -166,21 +166,23 @@ export default function Goals() {
                     <button
                       className="btn btn-sm"
                       onClick={() => dispatch({ type: "goal.log", payload: { id: g.id, date: today, delta: -1 } })}
+                      aria-label="Decrease"
                     >
-                      −
+                      <Minus size={14} />
                     </button>
                     <button
-                      className="btn btn-primary btn-sm"
+                      className="btn btn-primary btn-sm px-2 font-bold"
                       onClick={() => dispatch({ type: "goal.log", payload: { id: g.id, date: today, delta: 1 } })}
+                      aria-label="Increase"
                     >
                       +1
                     </button>
                     <button
-                      className="btn btn-ghost btn-sm text-muted"
+                      className="btn btn-ghost btn-sm text-muted opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
                       onClick={() => dispatch({ type: "goal.delete", payload: { id: g.id } })}
                       aria-label="Delete goal"
                     >
-                      ✕
+                      <Trash2 size={16} />
                     </button>
                   </div>
                   <div className="mt-2">

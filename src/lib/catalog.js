@@ -46,7 +46,7 @@ export const BRANCHES = [
     semesters: {
       1: SEM1,
       2: SEM2,
-      3: ["Data Structures", "Discrete Mathematics", "Digital Logic Design", "OOP with Java", "Computer Organization"],
+      3: ["Data Structures", "Mathematics III", "Digital Logic Design", "OOP with Java", "Computer Organization"],
       4: ["Design & Analysis of Algorithms", "Operating Systems", "DBMS", "Theory of Computation", "Probability & Statistics"],
       5: ["Computer Networks", "Software Engineering", "Compiler Design", "Web Technologies", "Microprocessors"],
       6: ["Machine Learning", "Cloud Computing", "Information Security", "Data Mining", "Minor Project"],

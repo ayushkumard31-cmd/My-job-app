@@ -6,7 +6,7 @@
 // want to look at someone else's semester.
 
 import { useMemo, useState } from "react";
-import { Card, Empty, Field, Pill, Segmented } from "@/components/ui";
+import { Card, Empty, Field, PageHeader, Pill, Segmented } from "@/components/ui";
 import {
   BranchSelector,
   CloudNote,
@@ -32,13 +32,11 @@ export default function Resources() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Resources</h1>
-        <p className="text-sm text-muted">
-          Notes, PYQs, important questions, lab manuals, books, videos and hobby material —
-          filtered to your branch and semester.
-        </p>
-      </header>
+      <PageHeader
+        title="Resources"
+        emoji="📚"
+        subtitle="Notes, PYQs, important questions, lab manuals, books, videos and hobby material — filtered to your branch and semester."
+      />
 
       <Segmented options={TABS} value={tab} onChange={setTab} />
 

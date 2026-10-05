@@ -7,9 +7,11 @@ import {
   Empty,
   Field,
   Modal,
+  PageHeader,
   Pill,
   Segmented,
 } from "@/components/ui";
+import { CheckSquare, Plus, Trash2, X } from "lucide-react";
 
 import { CATEGORIES, PRIORITIES, catColor } from "@/lib/catalog";
 import { useApp } from "@/lib/store";
@@ -243,27 +245,16 @@ export default function Tasks() {
           HEADER
       ================================================= */}
 
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">
-            Tasks
-          </h1>
-
-          <p className="text-sm text-muted">
-            {counts.open} open · {counts.today} due today
-            {counts.overdue
-              ? ` · ${counts.overdue} overdue`
-              : ""}
-          </p>
-        </div>
-
-        <button
-          className="btn btn-primary"
-          onClick={newTask}
-        >
-          + New task
-        </button>
-      </header>
+      <PageHeader
+        title="Tasks"
+        emoji="✅"
+        subtitle={`${counts.open} open · ${counts.today} due today${counts.overdue ? ` · ${counts.overdue} overdue` : ""}`}
+        action={
+          <button className="btn btn-primary" onClick={newTask}>
+            <Plus size={16} /> New task
+          </button>
+        }
+      />
 
       {/* =================================================
           FILTERS
@@ -295,7 +286,7 @@ export default function Tasks() {
               return (
                 <div
                   key={t.id}
-                  className="flex items-center gap-3 px-3 py-3"
+                  className="group flex items-center gap-3 px-3 py-3 sm:px-4 hover:bg-surface2/50 transition-colors"
                 >
 
                   {/* CHECKBOX */}
@@ -309,16 +300,10 @@ export default function Tasks() {
                         },
                       })
                     }
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-xs"
-                    style={{
-                      borderColor: t.done
-                        ? "var(--line)"
-                        : PRIORITIES[t.priority].color,
-
-                      background: t.done
-                        ? "var(--line)"
-                        : "transparent",
-                    }}
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-xs transition-all ${
+                      t.done ? "text-muted border-line bg-surface2" : "bg-surface hover:bg-surface-elevated"
+                    }`}
+                    style={!t.done ? { borderColor: PRIORITIES[t.priority].color } : {}}
                     aria-label={
                       t.done
                         ? "Mark as not done"
@@ -339,10 +324,10 @@ export default function Tasks() {
                   >
 
                     <p
-                      className={`truncate text-sm ${
+                      className={`truncate text-sm font-medium ${
                         t.done
                           ? "text-muted line-through"
-                          : ""
+                          : "text-ink group-hover:text-accent transition-colors"
                       }`}
                     >
                       {t.title}
@@ -409,7 +394,7 @@ export default function Tasks() {
                   {/* DELETE */}
 
                   <button
-                    className="btn btn-ghost btn-sm text-muted"
+                    className="btn btn-ghost btn-sm text-muted opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
                     onClick={() =>
                       dispatch({
                         type: "task.delete",
@@ -420,7 +405,7 @@ export default function Tasks() {
                     }
                     aria-label="Delete task"
                   >
-                    ✕
+                    <Trash2 size={16} />
                   </button>
 
                 </div>
