@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AccountCard from "@/components/AccountCard";
-import { Card, Field, SectionHeader, Segmented } from "@/components/ui";
+import { Card, Field, PageHeader, SectionHeader, Segmented } from "@/components/ui";
+import { X, Plus, Download, Upload, Trash2, RefreshCw } from "lucide-react";
 import { CollegePicker } from "@/components/library";
 import { ACCENTS, BRANCHES, CAREER_GOALS, HOBBIES, PRIORITIES, subjectsFor } from "@/lib/catalog";
 import { useApp } from "@/lib/store";
@@ -43,12 +44,11 @@ export default function Profile() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Profile</h1>
-        <p className="text-sm text-muted">
-          Change anything here and your routine rebuilds around it.
-        </p>
-      </header>
+      <PageHeader
+        title="Profile & Settings"
+        emoji="⚙️"
+        subtitle="Change anything here and your routine rebuilds around it."
+      />
 
       <Card className="space-y-3">
         <SectionHeader title="You" />
@@ -88,10 +88,11 @@ export default function Profile() {
               <span key={s} className="chip" data-on="true">
                 {s}
                 <button
+                  className="hover:text-rose-500 transition-colors"
                   onClick={() => set({ subjects: p.subjects.filter((x) => x !== s) })}
                   aria-label={`Remove ${s}`}
                 >
-                  ✕
+                  <X size={12} />
                 </button>
               </span>
             ))}
@@ -112,8 +113,8 @@ export default function Profile() {
               value={newSubject}
               onChange={(e) => setNewSubject(e.target.value)}
             />
-            <button className="btn" type="submit">
-              Add
+            <button className="btn btn-primary" type="submit">
+              <Plus size={16} /> Add
             </button>
           </form>
         </div>
@@ -336,20 +337,20 @@ export default function Profile() {
         <SectionHeader title="Data" />
         <div className="flex flex-wrap gap-2">
           <button
-            className="btn"
+            className="btn btn-sm"
             onClick={() => {
               Object.keys(state.plans).forEach((mode) =>
                 dispatch({ type: "clearPlan", payload: { mode } }),
               );
             }}
           >
-            ↻ Rebuild all day templates
+            <RefreshCw size={14} /> Rebuild all day templates
           </button>
-          <button className="btn" onClick={exportData}>
-            ⬇ Export backup
+          <button className="btn btn-sm" onClick={exportData}>
+            <Download size={14} /> Export backup
           </button>
-          <button className="btn" onClick={() => fileRef.current?.click()}>
-            ⬆ Import backup
+          <button className="btn btn-sm" onClick={() => fileRef.current?.click()}>
+            <Upload size={14} /> Import backup
           </button>
           <input
             ref={fileRef}
@@ -359,8 +360,7 @@ export default function Profile() {
             onChange={(e) => e.target.files?.[0] && importData(e.target.files[0])}
           />
           <button
-            className="btn"
-            style={{ color: "#ef4444" }}
+            className="btn btn-sm hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/30 transition-colors"
             onClick={() => {
               if (confirm("Erase everything and start over? This cannot be undone.")) {
                 dispatch({ type: "reset" });
@@ -368,7 +368,7 @@ export default function Profile() {
               }
             }}
           >
-            ✕ Reset everything
+            <Trash2 size={14} /> Reset everything
           </button>
         </div>
         <p className="text-xs text-muted">

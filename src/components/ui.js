@@ -28,15 +28,38 @@ export function Logo({ size = 28, className = "" }) {
 export function Card({
   className = "",
   children,
+  hover = false,
   ...rest
 }) {
   return (
     <div
-      className={"card p-4 " + className}
+      className={`card p-4 ${hover ? "hover:border-accent/30 hover:shadow-lg transition-all duration-200" : ""} ${className}`}
       {...rest}
     >
       {children}
     </div>
+  );
+}
+
+export function PageHeader({
+  title,
+  subtitle,
+  emoji,
+  action,
+}) {
+  return (
+    <header className="flex flex-wrap items-end justify-between gap-3 mb-6">
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 tracking-tight">
+          <span>{title}</span>
+          {emoji && <span className="text-xl">{emoji}</span>}
+        </h1>
+        {subtitle && (
+          <p className="text-sm text-muted mt-0.5">{subtitle}</p>
+        )}
+      </div>
+      {action}
+    </header>
   );
 }
 
@@ -45,7 +68,7 @@ export function SectionHeader({
   action,
 }) {
   return (
-    <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="mb-3 flex items-center justify-between gap-2">
       <h2 className="section-title">
         {title}
       </h2>
@@ -59,14 +82,17 @@ export function ProgressBar({
   value = 0,
   color,
   className = "",
+  size = "default",
 }) {
   const safeValue = Math.max(
     0,
     Math.min(100, Number(value) || 0)
   );
 
+  const heightClass = size === "sm" ? "h-[0.3rem]" : "";
+
   return (
-    <div className={"bar " + className}>
+    <div className={`bar ${heightClass} ${className}`}>
       <i
         style={{
           width: safeValue + "%",
@@ -140,7 +166,7 @@ export function Ring({
           }
           style={{
             transition:
-              "stroke-dashoffset .5s ease",
+              "stroke-dashoffset .5s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         />
       </svg>
@@ -210,25 +236,25 @@ export function Empty({
   action,
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+    <div className="flex flex-col items-center justify-center gap-2.5 px-4 py-12 text-center">
       <div
-        className="text-3xl"
+        className="text-3xl opacity-80"
         aria-hidden="true"
       >
         {emoji}
       </div>
 
-      <p className="font-medium">
+      <p className="font-semibold text-sm text-ink">
         {title}
       </p>
 
       {hint ? (
-        <p className="max-w-xs text-sm text-muted">
+        <p className="max-w-xs text-xs text-muted leading-relaxed">
           {hint}
         </p>
       ) : null}
 
-      {action}
+      {action && <div className="mt-1">{action}</div>}
     </div>
   );
 }
@@ -283,7 +309,7 @@ export function Modal({
         type="button"
         aria-label="Close modal"
         onClick={onClose}
-        className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/50 backdrop-blur-[3px]"
       />
 
       {/* Modal */}
@@ -291,9 +317,9 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="card fade-up relative z-10 max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-b-none p-4 sm:rounded-2xl"
+        className="card fade-up relative z-10 max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-b-none p-5 sm:rounded-2xl"
       >
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold">
             {title}
           </h3>
@@ -311,7 +337,7 @@ export function Modal({
         {children}
 
         {footer ? (
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="mt-5 flex justify-end gap-2">
             {footer}
           </div>
         ) : null}
@@ -360,7 +386,7 @@ export function Pill({
 }) {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none"
       style={{
         background:
           "color-mix(in srgb, " +
@@ -381,7 +407,7 @@ export function Stat({
   emoji,
 }) {
   return (
-    <div className="card p-3">
+    <div className="card p-3.5">
       <div className="flex items-center gap-1.5 text-xs text-muted">
         {emoji ? (
           <span aria-hidden="true">
@@ -392,15 +418,34 @@ export function Stat({
         {label}
       </div>
 
-      <div className="mt-1 text-xl font-bold leading-tight">
+      <div className="mt-1.5 text-xl font-bold leading-tight tracking-tight">
         {value}
       </div>
 
       {sub ? (
-        <div className="text-xs text-muted">
+        <div className="mt-0.5 text-xs text-muted">
           {sub}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+export function StatRow({
+  icon,
+  label,
+  value,
+  color,
+}) {
+  return (
+    <div className="flex items-center justify-between p-2.5 rounded-xl border border-line bg-surface/50 hover:bg-surface2/80 transition">
+      <span className="text-xs text-muted flex items-center gap-1.5">
+        {icon && <span>{icon}</span>}
+        {label}
+      </span>
+      <span className="text-xs font-bold" style={color ? { color } : { color: "var(--ink)" }}>
+        {value}
+      </span>
     </div>
   );
 }

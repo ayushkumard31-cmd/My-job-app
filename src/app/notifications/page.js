@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Card, Empty, Pill, SectionHeader, Stat } from "@/components/ui";
 import { deadlineType } from "@/lib/catalog";
-import { attendanceAdvice, attendancePct, useApp } from "@/lib/store";
+import { useApp } from "@/lib/store";
 import { countdownLabel, dateKey, daysUntil, shortDate } from "@/lib/time";
 
 function playNotificationChime() {
@@ -113,26 +113,6 @@ export default function NotificationsPage() {
         });
       });
 
-    // 2. Attendance alerts (below required %)
-    const requiredAttendance = state.profile?.attendanceRequired ?? 75;
-    (state.attendance || []).forEach((att) => {
-      const pct = attendancePct(att);
-      if (att.total > 0 && pct < requiredAttendance) {
-        const advice = attendanceAdvice(att, requiredAttendance);
-        alerts.push({
-          key: `attendance-${att.id}`,
-          category: "attendance",
-          priority: pct < requiredAttendance - 10 ? "urgent" : "warning",
-          icon: "📋",
-          title: `Low Attendance: ${att.name} (${pct}%)`,
-          desc: advice.text,
-          pill: `Target ${requiredAttendance}%`,
-          color: pct < requiredAttendance - 10 ? "#ef4444" : "#f59e0b",
-          href: "/attendance",
-          actionText: "Fix Attendance",
-        });
-      }
-    });
 
     // 3. Money / Budget alerts
     const currentMonth = today.slice(0, 7);
@@ -317,7 +297,7 @@ export default function NotificationsPage() {
           { id: "all", label: `All (${activeAlerts.length})` },
           { id: "urgent", label: `🚨 Urgent (${urgentCount})` },
           { id: "deadlines", label: "⏳ Deadlines" },
-          { id: "attendance", label: "📋 Attendance" },
+
           { id: "finance", label: "💰 Budget" },
           { id: "tasks", label: "✅ Tasks" },
         ].map((f) => (

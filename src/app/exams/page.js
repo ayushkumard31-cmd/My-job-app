@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, Empty, Field, Modal, Pill, ProgressBar, SectionHeader, Segmented } from "@/components/ui";
+import { Card, Empty, Field, Modal, PageHeader, Pill, ProgressBar, SectionHeader, Segmented } from "@/components/ui";
+import { Plus, Trash2, CheckCircle2, Undo2 } from "lucide-react";
 import { DEADLINE_TYPES, PROJECT_STAGES, deadlineType } from "@/lib/catalog";
 import { useApp } from "@/lib/store";
 import { countdownLabel, dateKey, daysUntil, shortDate } from "@/lib/time";
@@ -42,21 +43,22 @@ export default function Deadlines() {
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">Exams & deadlines</h1>
-          <p className="text-sm text-muted">Exams, assignments, lab records, projects — one countdown.</p>
-        </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setDraft({ title: "", type: "exam", date: dateKey(), subject: "", stages: {} });
-            setOpen(true);
-          }}
-        >
-          + Add deadline
-        </button>
-      </header>
+      <PageHeader
+        title="Exams & Deadlines"
+        emoji="⏳"
+        subtitle="Exams, assignments, lab records, projects — one countdown."
+        action={
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setDraft({ title: "", type: "exam", date: dateKey(), subject: "", stages: {} });
+              setOpen(true);
+            }}
+          >
+            <Plus size={16} /> Add deadline
+          </button>
+        }
+      />
 
       {nearest && (
         <Card
@@ -101,7 +103,7 @@ export default function Deadlines() {
             const isProject = d.type === "project";
             const doneStages = PROJECT_STAGES.filter((s) => d.stages?.[s]).length;
             return (
-              <Card key={d.id} className="space-y-2">
+              <Card key={d.id} className="group space-y-2 transition hover:border-accent/30">
                 <div className="flex items-start gap-3">
                   <span className="text-xl">{type.emoji}</span>
                   <button
@@ -119,18 +121,18 @@ export default function Deadlines() {
                   </button>
                   {!d.done && <Pill color={urgency(days)}>{countdownLabel(d.date)}</Pill>}
                   <button
-                    className="btn btn-ghost btn-sm"
+                    className="btn btn-ghost btn-sm px-2 text-muted hover:text-ink transition-colors"
                     onClick={() => dispatch({ type: "deadline.toggle", payload: { id: d.id } })}
                     aria-label="Toggle complete"
                   >
-                    {d.done ? "↩" : "✓"}
+                    {d.done ? <Undo2 size={16} /> : <CheckCircle2 size={16} />}
                   </button>
                   <button
-                    className="btn btn-ghost btn-sm text-muted"
+                    className="btn btn-ghost btn-sm px-2 text-muted opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
                     onClick={() => dispatch({ type: "deadline.delete", payload: { id: d.id } })}
                     aria-label="Delete"
                   >
-                    ✕
+                    <Trash2 size={16} />
                   </button>
                 </div>
 

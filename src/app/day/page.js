@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import SortableList, { reorder } from "@/components/SortableList";
@@ -6,9 +6,11 @@ import {
   Card,
   Field,
   Modal,
+  PageHeader,
   SectionHeader,
   Segmented,
 } from "@/components/ui";
+import { ChevronLeft, ChevronRight, Plus, RefreshCw, Play, Trash2, GripVertical } from "lucide-react";
 
 import {
   CATEGORIES,
@@ -1009,65 +1011,38 @@ export default function MyDay() {
           HEADER
       ====================================================== */}
 
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">
-            My Day
-          </h1>
+      <PageHeader
+        title="My Day"
+        emoji="🗓️"
+        subtitle={longDate(parseKey(date))}
+        action={
+          <div className="flex items-center gap-1 bg-surface2/50 rounded-lg p-1 border border-line">
+            <button
+              className="btn btn-ghost btn-sm px-2"
+              onClick={() => setOffset((o) => o - 1)}
+              aria-label="Previous day"
+            >
+              <ChevronLeft size={16} />
+            </button>
 
-          <p
-            className="text-sm"
-            style={{
-              color:
-                "var(--muted)",
-            }}
-          >
-            {longDate(
-              parseKey(
-                date
-              )
-            )}
-          </p>
-        </div>
+            <button
+              className="btn btn-ghost btn-sm px-3 font-semibold"
+              onClick={() => setOffset(0)}
+              disabled={offset === 0}
+            >
+              Today
+            </button>
 
-        <div className="flex items-center gap-1">
-          <button
-            className="btn btn-sm"
-            onClick={() =>
-              setOffset(
-                (o) =>
-                  o - 1
-              )
-            }
-          >
-            ←
-          </button>
-
-          <button
-            className="btn btn-sm"
-            onClick={() =>
-              setOffset(0)
-            }
-            disabled={
-              offset === 0
-            }
-          >
-            Today
-          </button>
-
-          <button
-            className="btn btn-sm"
-            onClick={() =>
-              setOffset(
-                (o) =>
-                  o + 1
-              )
-            }
-          >
-            →
-          </button>
-        </div>
-      </header>
+            <button
+              className="btn btn-ghost btn-sm px-2"
+              onClick={() => setOffset((o) => o + 1)}
+              aria-label="Next day"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        }
+      />
 
 
       {/* =====================================================
@@ -1227,43 +1202,24 @@ export default function MyDay() {
 
           <div className="ml-auto flex gap-2">
             <button
-              className="btn btn-sm"
+              className="btn btn-sm btn-primary"
               onClick={() =>
                 setEditing({
-                  id: `new-${uid(
-                    "b"
-                  )}`,
-
-                  uid: uid(
-                    "b"
-                  ),
-
+                  id: `new-${uid("b")}`,
+                  uid: uid("b"),
                   label: "",
-
                   emoji: "📖",
-
-                  start:
-                    18 * 60,
-
-                  end:
-                    19 * 60,
-
-                  category:
-                    "custom",
-
-                  priority:
-                    "medium",
-
+                  start: 18 * 60,
+                  end: 19 * 60,
+                  category: "custom",
+                  priority: "medium",
                   fixed: false,
-
-                  source:
-                    "custom",
-
+                  source: "custom",
                   isNew: true,
                 })
               }
             >
-              + Add block
+              <Plus size={14} /> Add block
             </button>
 
             <button
@@ -1280,7 +1236,7 @@ export default function MyDay() {
                 !isCustom
               }
             >
-              ♻ Regenerate
+              <RefreshCw size={14} /> Regenerate
             </button>
           </div>
         </div>
@@ -1373,14 +1329,10 @@ export default function MyDay() {
 
               <button
                 {...handleProps}
-                className="px-1 text-lg"
-                style={{
-                  color:
-                    "var(--muted)",
-                }}
+                className="px-1 py-2 text-muted hover:text-ink transition-colors cursor-grab active:cursor-grabbing"
                 aria-label={`Move ${b.label}`}
               >
-                ⠿
+                <GripVertical size={18} />
               </button>
 
 
@@ -1492,7 +1444,7 @@ export default function MyDay() {
                 b.end >
                   b.start && (
                   <button
-                    className="btn btn-ghost btn-sm"
+                    className="btn btn-ghost btn-sm px-2 text-accent"
                     onClick={() =>
                       setRunningBlock(
                         b
@@ -1500,7 +1452,7 @@ export default function MyDay() {
                     }
                     title="Start activity"
                   >
-                    ▶
+                    <Play size={16} className="fill-accent/20" />
                   </button>
                 )}
 
@@ -1508,7 +1460,9 @@ export default function MyDay() {
               {/* COMPLETE */}
 
               <button
-                className="btn btn-ghost btn-sm"
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-xs transition-all ${
+                  isDone ? "text-muted border-line bg-surface2" : "bg-surface border-line hover:bg-surface-elevated"
+                }`}
                 onClick={() =>
                   toggleDone(
                     b
@@ -1517,8 +1471,8 @@ export default function MyDay() {
                 aria-label="Toggle done"
               >
                 {isDone
-                  ? "✅"
-                  : "⬜"}
+                  ? "✓"
+                  : ""}
               </button>
             </div>
           );
